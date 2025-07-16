@@ -70,7 +70,6 @@ async function initializeAppState() {
                 isAuthReady = false;
                 currentUser = null;
                 currentUserRole = 'anonymous';
-                // Clear all caches
                 [studentsCache, classesCache, plansCache, notificationsCache, expensesCache] = [[], [], [], [], []];
                 [settingsCache, attendanceCache, examsCache, financialsCache] = [{}, {}, {}, {}];
                 showAuthScreen();
@@ -491,13 +490,11 @@ window.renderIncomeOverTimeChart = () => { /* ... full chart implementation ... 
 
 window.checkPendingAttendance = () => {
     const list = document.getElementById('pending-attendance-list');
-    // Logic to find students with many recent absences
     list.innerHTML = `<p class="text-center text-gray-500">لا يوجد طلاب بحاجة لمراجعة.</p>`;
 };
 
 window.checkPendingPayments = () => {
     const list = document.getElementById('pending-payments-list');
-    // Logic to find students with pending payments
     list.innerHTML = `<p class="text-center text-gray-500">لا توجد دفعات معلقة.</p>`;
 };
 
@@ -543,7 +540,95 @@ window.renderParentStudentProfile = (studentId) => {
     `;
 };
 
-// --- DATA MANIPULATION (FULL IMPLEMENTATION) ---
+// --- DATA MANIPULATION ---
+window.handleStudentFormSubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('student-id').value;
+    const studentData = {
+        name: document.getElementById('student-name').value,
+        age: document.getElementById('student-age').value,
+        guardian_name: document.getElementById('student-guardian').value,
+        start_date: document.getElementById('student-start-date').value,
+        phone: document.getElementById('student-phone').value,
+        country_code: document.getElementById('student-country-code').value,
+        class_id: document.getElementById('student-class-select').value || null,
+        plan_id: document.getElementById('student-plan-select').value || null,
+        juz_start: parseInt(document.getElementById('student-juz-start').value),
+        notes: document.getElementById('student-notes-modal').value,
+        user_id: currentUser.id
+    };
+
+    let response;
+    if (id) {
+        response = await supabaseClient.from('students').update(studentData).eq('id', id);
+    } else {
+        studentData.progress = {};
+        studentData.tasmee_sessions = [];
+        studentData.achievements = [];
+        response = await supabaseClient.from('students').insert([studentData]);
+    }
+
+    if (response.error) {
+        console.error("Error saving student:", response.error);
+        customAlert("فشل حفظ بيانات الطالب.");
+    } else {
+        createNotification(id ? `تم تحديث بيانات الطالب ${studentData.name}` : `تم إضافة طالب جديد: ${studentData.name}`, "success");
+        closeModal('student-modal');
+        await loadAllData();
+    }
+};
+
+window.deleteStudent = (id, name) => {
+    customConfirm(`هل أنت متأكد من حذف الطالب ${name}؟ سيتم حذف جميع بياناته المرتبطة.`, async () => {
+        const { error } = await supabaseClient.from('students').delete().eq('id', id);
+        if (error) {
+            console.error("Error deleting student:", error);
+            customAlert("فشل حذف الطالب.");
+        } else {
+            createNotification(`تم حذف الطالب ${name}`, "warning");
+            await loadAllData();
+        }
+    });
+};
+
+window.handleClassFormSubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('class-id').value;
+    const classData = {
+        name: document.getElementById('class-name').value,
+        schedule: document.getElementById('class-schedule').value,
+        fee: parseFloat(document.getElementById('class-fee').value) || 0,
+        teacher_id: document.getElementById('class-teacher-select').value || null,
+        photo: document.getElementById('class-photo').value,
+        user_id: currentUser.id
+    };
+
+    const { error } = id 
+        ? await supabaseClient.from('classes').update(classData).eq('id', id)
+        : await supabaseClient.from('classes').insert([classData]);
+
+    if (error) {
+        console.error("Error saving class:", error);
+        customAlert("فشل حفظ بيانات الفصل.");
+    } else {
+        createNotification(id ? `تم تحديث الفصل ${classData.name}` : `تم إنشاء فصل جديد: ${classData.name}`, "success");
+        closeModal('class-modal');
+        await loadAllData();
+    }
+};
+
+window.deleteClass = (id, name) => {
+    customConfirm(`هل أنت متأكد من حذف فصل ${name}؟`, async () => {
+        const { error } = await supabaseClient.from('classes').delete().eq('id', id);
+        if (error) {
+            console.error("Error deleting class:", error);
+            customAlert("فشل حذف الفصل.");
+        } else {
+            createNotification(`تم حذف الفصل ${name}`, "warning");
+            await loadAllData();
+        }
+    });
+};
 
 window.handlePlanFormSubmit = async (e) => {
     e.preventDefault();
