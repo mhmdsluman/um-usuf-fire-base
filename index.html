@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة أم يوسف المطورة (نسخة محلية)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    
+    <!-- html2pdf for printing reports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="fixed inset-0 bg-gray-200 dark:bg-gray-900 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md text-center">
+            <h2 class="text-3xl font-bold mb-6 text-theme dark:text-theme-dark">مرحباً بك في منصة التحفيظ</h2>
+            <p id="auth-message" class="text-red-500 mb-4 hidden"></p>
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <input type="email" id="auth-email" placeholder="البريد الإلكتروني" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" required>
+                </div>
+                <div>
+                    <input type="password" id="auth-password" placeholder="كلمة المرور" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" required>
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full bg-theme text-white p-3 rounded-lg font-semibold hover:bg-theme-dark transition duration-200">تسجيل الدخول</button>
+            </form>
+            <div class="mt-6 text-gray-600 dark:text-gray-400">
+                <p>
+                    ليس لديك حساب؟ 
+                    <button id="toggle-auth-mode" class="text-blue-600 hover:underline">إنشاء حساب جديد</button>
+                </p>
+                <p class="mt-2">
+                    <button id="sign-in-anonymously" class="text-gray-500 hover:underline text-sm">أو الدخول كزائر (بدون حفظ البيانات)</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="flex h-screen hidden"> <!-- Hidden by default, shown after auth -->
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-theme text-white w-64 min-h-screen p-4 fixed top-0 right-0 h-full sidebar">
+            <div class="text-center mb-10">
+                <h1 class="text-2xl font-bold">منصة التحفيظ المحلية</h1>
+                <p class="text-sm">بإدارة أم يوسف</p>
+                <div id="user-id-display" class="text-xs text-white/70 mt-2"></div>
+            </div>
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('dashboard-view')">اللوحة الرئيسية</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('financials-dashboard-view')">لوحة المالية</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('students-view')">الطلاب</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('classes-view')">الفصول (الحلقات)</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('tasmee-view')">التسميع</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('attendance-view')">الحضور والغياب</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('exams-view')">الاختبارات</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('plans-view')">خطط الحفظ</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('financials-view')">الأمور المالية</a>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20" onclick="showView('settings-view')">الإعدادات</a>
+                <button class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20 w-full text-right mt-4" onclick="handleLogout()">تسجيل الخروج</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6 lg:p-10 main-content mr-64 overflow-y-auto">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-6 relative z-10">
+                <button id="sidebar-toggle" class="lg:hidden p-2 bg-theme text-white rounded">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="flex items-center gap-4">
+                    <div id="notification-bell" class="notification-bell">
+                        <svg class="w-6 h-6 text-gray-500 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-1.707 1.707A1 1 0 003 15h14a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+                        <span id="notification-dot" class="notification-dot hidden"></span>
+                        <div id="notifications-panel" class="hidden absolute left-0 mt-2 w-80 bg-white dark:bg-gray-700 rounded-lg shadow-lg border dark:border-gray-600">
+                            <div class="p-3 font-bold border-b dark:border-gray-600 flex justify-between items-center">
+                                <span>الإشعارات</span>
+                                <button class="text-xs text-blue-500 hover:underline" onclick="markAllNotificationsAsRead()">تعليم الكل كمقروء</button>
+                            </div>
+                            <div id="notifications-panel-content" class="max-h-80 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+                        <svg class="w-6 h-6 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Views Container -->
+            <div id="views-container">
+
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="view">
+                    <h2 class="text-3xl font-bold mb-6">اللوحة الرئيسية التحليلية</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">إجمالي الطلاب</h3>
+                            <p id="total-students-dashboard" class="text-4xl font-bold text-theme dark:text-theme-dark">0</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">طلاب نشطون اليوم</h3>
+                            <p id="active-today-dashboard" class="text-4xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">إجمالي الصفحات المحفوظة</h3>
+                            <p id="total-pages-dashboard" class="text-4xl font-bold text-blue-600">0</p>
+                        </div>
+                         <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">متوسط الدرجات</h3>
+                            <p id="avg-exam-score-dashboard" class="text-4xl font-bold text-purple-600">0%</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-xl font-bold mb-4">معدل الحفظ الأسبوعي (آخر 4 أسابيع)</h3>
+                            <canvas id="weekly-progress-chart"></canvas>
+                        </div>
+                        <div class="lg:col-span-1 bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-xl font-bold mb-4">توزيع الطلاب على الفصول</h3>
+                            <canvas id="class-distribution-chart"></canvas>
+                        </div>
+                    </div>
+                     <div class="mt-6 bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">أفضل 5 طلاب (حسب إجمالي الحفظ)</h3>
+                        <div id="top-students-list"></div>
+                    </div>
+                </div>
+
+                <!-- Financials Dashboard View -->
+                <div id="financials-dashboard-view" class="view hidden">
+                    <h2 class="text-3xl font-bold mb-6">لوحة المتابعة المالية</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md text-center">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">إجمالي الدخل (هذا الشهر)</h3>
+                            <p id="total-income-dashboard" class="text-4xl font-bold text-green-500 mt-2">0</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md text-center">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">المدفوعات المعلقة (هذا الشهر)</h3>
+                            <p id="pending-payments-dashboard" class="text-4xl font-bold text-yellow-500 mt-2">0</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md text-center">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300">الطلاب المعفيون</h3>
+                            <p id="exempt-students-dashboard" class="text-4xl font-bold text-blue-500 mt-2">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">الدخل المتوقع مقابل الفعلي (آخر 6 أشهر)</h3>
+                        <canvas id="income-over-time-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Students View -->
+                <div id="students-view" class="view hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <h2 class="text-3xl font-bold">إدارة الطلاب</h2>
+                        <button class="bg-theme text-white px-6 py-2 rounded-lg hover:bg-theme-dark" onclick="openStudentModal()">إضافة طالب جديد</button>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <input type="text" id="student-search" placeholder="ابحث عن طالب..." class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                            <select id="filter-class" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" onchange="renderStudentsTable()"></select>
+                        </div>
+                        <div class="flex items-center mb-4">
+                            <button id="assign-class-bulk" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm" onclick="openAssignClassBulkModal()">تعيين لفصل (محدد)</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white dark:bg-gray-700">
+                                <thead class="bg-gray-200 dark:bg-gray-600">
+                                    <tr>
+                                        <th class="py-3 px-2"><input type="checkbox" id="select-all-students" class="custom-checkbox" onclick="toggleAllStudentCheckboxes(this.checked)"></th>
+                                        <th class="py-3 px-6 text-right">الاسم</th>
+                                        <th class="py-3 px-6 text-right">الفصل</th>
+                                        <th class="py-3 px-6 text-right">مجموع الحفظ (صفحة)</th>
+                                        <th class="py-3 px-6 text-right">العمر</th>
+                                        <th class="py-3 px-6 text-center">إجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="students-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Student Profile View -->
+                <div id="student-profile-view" class="view hidden"></div>
+
+                <!-- Classes View -->
+                <div id="classes-view" class="view hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold">إدارة الفصول (الحلقات)</h2>
+                        <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700" onclick="openClassModal()">إنشاء فصل جديد</button>
+                    </div>
+                    <div id="classes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+                
+                <!-- Class Details View -->
+                <div id="class-details-view" class="view hidden"></div>
+                
+                <!-- Tasmee' View -->
+                <div id="tasmee-view" class="view hidden">
+                    <h2 class="text-3xl font-bold mb-6">تسجيل التسميع</h2>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                            <div>
+                                <label for="tasmee-class-select" class="font-semibold">اختر الفصل:</label>
+                                <select id="tasmee-class-select" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" onchange="loadStudentsFor('tasmee-student-select', this.value)"></select>
+                            </div>
+                            <div>
+                                <label for="tasmee-student-select" class="font-semibold">اختر الطالب:</label>
+                                <select id="tasmee-student-select" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600"></select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                            <div>
+                                <label for="tasmee-juz" class="font-semibold">الجزء</label>
+                                <input type="number" id="tasmee-juz" min="1" max="30" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" placeholder="رقم الجزء">
+                            </div>
+                            <div>
+                                <label for="tasmee-page-from" class="font-semibold">من صفحة</label>
+                                <input type="number" id="tasmee-page-from" min="1" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" placeholder="e.g. 1">
+                            </div>
+                            <div>
+                                <label for="tasmee-page-to" class="font-semibold">إلى صفحة</label>
+                                <input type="number" id="tasmee-page-to" min="1" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" placeholder="e.g. 5">
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700" onclick="saveTasmeeResults()">حفظ التسميع</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance View -->
+                <div id="attendance-view" class="view hidden">
+                    <h2 class="text-3xl font-bold mb-6">تسجيل الحضور والغياب</h2>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <div class="flex items-center mb-4">
+                            <label for="attendance-class-select" class="ml-4 font-semibold">اختر الفصل:</label>
+                            <select id="attendance-class-select" class="p-2 border rounded w-full md:w-1/3 dark:bg-gray-800 dark:border-gray-600" onchange="renderAttendanceTable()"></select>
+                            <label for="attendance-date" class="mx-4 font-semibold">التاريخ:</label>
+                            <input type="date" id="attendance-date" class="p-2 border rounded dark:bg-gray-800 dark:border-gray-600" onchange="renderAttendanceTable()">
+                        </div>
+                        <div id="attendance-table-container" class="overflow-x-auto"></div>
+                        <div class="mt-6 flex justify-between items-center">
+                            <button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700" onclick="saveAttendance()">حفظ الحضور</button>
+                            <button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600" onclick="generateMonthlyReport()">طباعة تقرير شهري</button>
+                        </div>
+                    </div>
+                    <div id="monthly-report-view" class="hidden mt-8 bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md"></div>
+                </div>
+                
+                <!-- Exams View -->
+                <div id="exams-view" class="view hidden">
+                    <h2 class="text-3xl font-bold mb-6">رصد درجات الاختبارات</h2>
+                     <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <div class="flex flex-wrap items-center mb-4 gap-4">
+                            <div class="flex-grow">
+                                <label for="exam-class-select" class="font-semibold">اختر الفصل:</label>
+                                <select id="exam-class-select" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" onchange="loadStudentsFor('exam-student-select', this.value)"></select>
+                            </div>
+                            <div class="flex-grow">
+                                <label for="exam-student-select" class="font-semibold">اختر الطالب:</label>
+                                <select id="exam-student-select" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600"></select>
+                            </div>
+                             <div class="flex-grow">
+                                <label for="exam-name" class="font-semibold">اسم الاختبار:</label>
+                                <input type="text" id="exam-name" placeholder="مثال: اختبار الجزء الأول" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600">
+                            </div>
+                             <div class="flex-grow">
+                                <label for="exam-juz" class="font-semibold">الجزء المختبر فيه</label>
+                                <input type="number" id="exam-juz" min="1" max="30" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" placeholder="رقم الجزء">
+                            </div>
+                        </div>
+                        <div id="exam-fields-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"></div>
+                        <div class="text-left">
+                            <button class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700" onclick="saveExamResults()">حفظ نتيجة الاختبار</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financials View -->
+                <div id="financials-view" class="view hidden">
+                    <h2 class="text-3xl font-bold mb-6">متابعة الأمور المالية</h2>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                        <div class="flex items-center gap-4 mb-6">
+                            <label for="financial-month" class="font-semibold">اختر الشهر:</label>
+                            <input type="month" id="financial-month" class="p-2 border rounded dark:bg-gray-800 dark:border-gray-600" onchange="renderFinancialsTable()">
+                        </div>
+                        <div id="financials-table-container" class="overflow-x-auto"></div>
+                        <div class="mt-6 text-left">
+                            <button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700" onclick="saveFinancials()">حفظ التغييرات المالية</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plans View -->
+                <div id="plans-view" class="view hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold">خطط الحفظ</h2>
+                        <button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700" onclick="openPlanModal()">إنشاء خطة جديدة</button>
+                    </div>
+                    <div id="plans-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="settings-view" class="view hidden">
+                    <h2 class="text-3xl font-bold mb-6">الإعدادات المتقدمة</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-xl font-bold mb-4">تخصيص المظهر والعملة</h3>
+                             <div class="mb-4">
+                                <label for="theme-color-picker" class="block mb-2 font-semibold">اختر اللون الأساسي للتطبيق</label>
+                                <input type="color" id="theme-color-picker" class="p-1 h-10 w-full block border border-gray-300 rounded-lg cursor-pointer" value="#0d9488">
+                            </div>
+                            <div class="mb-4">
+                                <label for="currency-select" class="block mb-2 font-semibold">اختر العملة الرئيسية</label>
+                                <select id="currency-select" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" onchange="updateCurrency()">
+                                    <option value="SDG">جنيه سوداني (SDG)</option>
+                                    <option value="USD">دولار أمريكي ($)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+                            <h3 class="text-xl font-bold mb-4">إدارة البيانات المحلية</h3>
+                            <p class="text-gray-600 dark:text-gray-300 mb-4">تصدير جميع بيانات التطبيق إلى ملف JSON أو استيرادها.</p>
+                            <div class="flex gap-4 mt-4">
+                                <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700" onclick="exportData()">تصدير البيانات</button>
+                                <label class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer">
+                                    <span>استيراد البيانات</span>
+                                    <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importData(event)">
+                                </label>
+                            </div>
+                            <div class="mt-6">
+                                <button class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700" onclick="resetAllData()">مسح جميع البيانات نهائياً</button>
+                                <p class="text-xs text-gray-500 mt-2">تحذير: هذا الإجراء لا يمكن التراجع عنه.</p>
+                            </div>
+                        </div>
+                         <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md lg:col-span-2">
+                            <h3 class="text-xl font-bold mb-4">إدارة حقول الاختبارات</h3>
+                            <div id="exam-fields-settings-container"></div>
+                            <div class="flex gap-4 mt-4">
+                                <input type="text" id="new-field-name" placeholder="اسم الحقل الجديد" class="p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600">
+                                <input type="number" id="new-field-mark" placeholder="الدرجة" class="p-2 border rounded w-24 dark:bg-gray-800 dark:border-gray-600">
+                                <button class="bg-theme text-white px-4 py-2 rounded-lg hover:bg-theme-dark" onclick="addExamField()">إضافة</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="student-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal p-4">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto">
+            <h3 id="student-modal-title" class="text-2xl font-bold mb-6"></h3>
+            <form id="student-form" onsubmit="handleStudentFormSubmit(event)">
+                <input type="hidden" id="student-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block mb-1">اسم الطالب</label><input type="text" id="student-name" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" required></div>
+                    <div><label class="block mb-1">العمر</label><input type="number" id="student-age" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div>
+                    <div><label class="block mb-1">اسم ولي الأمر</label><input type="text" id="student-guardian" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div>
+                    <div><label class="block mb-1">تاريخ الانضمام</label><input type="date" id="student-start-date" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div>
+                    <div class="md:col-span-2"><label class="block mb-1">رقم ولي الأمر</label>
+                        <div class="flex">
+                            <select id="student-country-code" class="p-2 border rounded-r-none bg-gray-50 dark:bg-gray-600 dark:border-gray-600"></select>
+                            <input type="tel" id="student-phone" class="w-full p-2 border-l-0 rounded-l-none rounded-r-lg dark:bg-gray-800 dark:border-gray-600">
+                        </div>
+                    </div>
+                    <div><label class="block mb-1">الفصل</label><select id="student-class-select" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></select></div>
+                    <div><label class="block mb-1">خطة الحفظ</label><select id="student-plan-select" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></select></div>
+                    <div><label class="block mb-1">يبدأ من جزء</label><input type="number" id="student-juz-start" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" value="1" min="1" max="30"></div>
+                    <div class="md:col-span-2"><label class="block mb-1">ملاحظات</label><textarea id="student-notes-modal" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" rows="3"></textarea></div>
+                </div>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" class="bg-gray-500 text-white px-6 py-2 rounded-lg" onclick="closeModal('student-modal')">إلغاء</button>
+                    <button type="submit" class="bg-theme text-white px-6 py-2 rounded-lg">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="class-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <h3 id="class-modal-title" class="text-2xl font-bold mb-6"></h3>
+            <form id="class-form" onsubmit="handleClassFormSubmit(event)">
+                <input type="hidden" id="class-id">
+                <div class="mb-4"><label for="class-name" class="block mb-2 font-semibold">اسم الفصل</label><input type="text" id="class-name" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" required></div>
+                <div class="mb-4"><label for="class-schedule" class="block mb-2 font-semibold">جدول الفصل</label><input type="text" id="class-schedule" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" placeholder="مثال: الأحد، الثلاثاء - 4م"></div>
+                <div class="mb-4"><label for="class-fee" class="block mb-2 font-semibold">الرسوم الشهرية</label><input type="number" id="class-fee" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" placeholder="e.g., 5000"></div>
+                <div class="mb-4"><label for="class-photo" class="block mb-2 font-semibold">صورة الفصل (رابط URL)</label><input type="text" id="class-photo" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" placeholder="https://placehold.co/600x400"></div>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" class="bg-gray-500 text-white px-6 py-2 rounded-lg" onclick="closeModal('class-modal')">إلغاء</button>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="plan-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <h3 id="plan-modal-title" class="text-2xl font-bold mb-6"></h3>
+            <form id="plan-form" onsubmit="handlePlanFormSubmit(event)">
+                <input type="hidden" id="plan-id">
+                <div class="mb-4"><label for="plan-name" class="block mb-2 font-semibold">اسم الخطة</label><input type="text" id="plan-name" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" required></div>
+                <div class="mb-4"><label for="plan-description" class="block mb-2 font-semibold">وصف الخطة</label><textarea id="plan-description" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600" rows="3" placeholder="مثال: 5 صفحات أسبوعياً"></textarea></div>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" class="bg-gray-500 text-white px-6 py-2 rounded-lg" onclick="closeModal('plan-modal')">إلغاء</button>
+                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="alert-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center">
+            <p id="alert-message" class="text-lg mb-6"></p>
+            <button class="bg-theme text-white px-8 py-2 rounded-lg" onclick="closeModal('alert-modal')">حسنًا</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center">
+            <p id="confirm-message" class="text-lg mb-6"></p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-cancel-btn" class="bg-gray-500 text-white px-8 py-2 rounded-lg">إلغاء</button>
+                <button id="confirm-ok-btn" class="bg-red-600 text-white px-8 py-2 rounded-lg">تأكيد</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="assign-class-bulk-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <h3 class="text-2xl font-bold mb-6">تعيين فصل للطلاب المحددين</h3>
+            <div class="mb-4"><label for="bulk-assign-class-select" class="block mb-2 font-semibold">اختر الفصل</label><select id="bulk-assign-class-select" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></select></div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button type="button" class="bg-gray-500 text-white px-6 py-2 rounded-lg" onclick="closeModal('assign-class-bulk-modal')">إلغاء</button>
+                <button type="button" class="bg-blue-600 text-white px-6 py-2 rounded-lg" onclick="handleBulkAssignClass()">تعيين</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-details-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-2xl w-full max-w-lg">
+            <h3 class="text-2xl font-bold mb-4">تفاصيل الإشعار</h3>
+            <p id="notification-modal-message" class="text-lg mb-6"></p>
+            <p id="notification-modal-date" class="text-sm text-gray-500 mb-6"></p>
+            <div class="text-right">
+                <button class="bg-theme text-white px-8 py-2 rounded-lg" onclick="closeModal('notification-details-modal')">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
