@@ -70,6 +70,7 @@ async function initializeAppState() {
                 isAuthReady = false;
                 currentUser = null;
                 currentUserRole = 'anonymous';
+                // Clear all caches
                 [studentsCache, classesCache, plansCache, notificationsCache, expensesCache] = [[], [], [], [], []];
                 [settingsCache, attendanceCache, examsCache, financialsCache] = [{}, {}, {}, {}];
                 showAuthScreen();
@@ -274,8 +275,6 @@ window.toggleTheme = async () => {
 };
 
 // --- AUTHENTICATION ---
-let authMode = 'login'; // or 'signup' as default
-
 async function handleAuthFormSubmit(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value;
