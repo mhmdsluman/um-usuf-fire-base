@@ -274,6 +274,8 @@ window.toggleTheme = async () => {
 };
 
 // --- AUTHENTICATION ---
+let authMode = 'login'; // or 'signup' as default
+
 async function handleAuthFormSubmit(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value;
