@@ -48,14 +48,13 @@
 
     <div id="app-container" class="flex h-screen hidden">
       <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="document.getElementById('sidebar').classList.remove('sidebar-mobile-open'); this.classList.add('hidden');"></div>
-      
+
       <aside id="sidebar" class="bg-theme text-white w-64 h-screen fixed top-0 right-0 flex flex-col p-4 z-50 sidebar">
             <div class="text-center mb-6">
                 <h1 class="text-2xl font-bold">منصة التحفيظ</h1>
                 <p class="text-sm">بإدارة أم يوسف</p>
                 <div id="user-id-display" class="text-xs text-white/70 mt-2 break-all"></div>
             </div>
-
             <nav class="flex-1 overflow-y-auto space-y-2 pr-1">
                 <a href="#" onclick="showView('dashboard-view')" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20">اللوحة الرئيسية</a>
                 <a href="#" onclick="showView('financials-dashboard-view')" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20">لوحة المالية</a>
@@ -75,14 +74,13 @@
                     <a href="#" onclick="showView('parent-portal-view')" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20">بوابة أولياء الأمور</a>
                 </div>
             </nav>
-
             <div class="pt-4 border-t border-white/20 mt-4">
                 <button onclick="handleLogout()" class="w-full text-right flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-white/20">
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     تسجيل الخروج
                 </button>
             </div>
-        </aside>
+      </aside>
 
         <main id="main-content" class="flex-1 p-6 lg:p-10 main-content lg:mr-64 overflow-y-auto">
             <header class="flex justify-between items-center mb-6 relative z-10">
@@ -108,6 +106,7 @@
             </header>
 
             <div id="views-container">
+
                 <div id="dashboard-view" class="view">
                     <h2 class="text-3xl font-bold mb-6">اللوحة الرئيسية التحليلية</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -177,7 +176,7 @@
                 
                 <div id="exams-view" class="view hidden">
                     <h2 class="text-3xl font-bold mb-6">رصد درجات الاختبارات</h2>
-                     <form id="exam-form">
+                    <form id="exam-form">
                         <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"><div class="flex-grow"><label for="exam-class-select" class="font-semibold">اختر الفصل:</label><select id="exam-class-select" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600"></select></div><div class="flex-grow"><label for="exam-student-select" class="font-semibold">اختر الطالب:</label><select id="exam-student-select" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600"></select></div><div class="flex-grow"><label for="exam-name" class="font-semibold">اسم الاختبار:</label><input type="text" id="exam-name" placeholder="مثال: اختبار الجزء الأول" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600"></div><div class="flex-grow"><label for="exam-juz" class="font-semibold">الجزء المختبر فيه</label><input type="number" id="exam-juz" min="1" max="30" class="mt-1 p-2 border rounded w-full dark:bg-gray-800 dark:border-gray-600" placeholder="رقم الجزء"></div></div>
                             <div id="exam-fields-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"></div>
@@ -198,7 +197,7 @@
                 </div>
 
                 <div id="plans-view" class="view hidden">
-                    <div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold">خطط الحفظ</h2><button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700" onclick="openPlanModal()">إنشاء خطة جديدة</button></div>
+                    <div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold">خطط الحفظ</h2><div><button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700" onclick="openPlanModal()">إنشاء خطة جديدة</button> <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700" onclick="openAssignPlanBulkModal()">تعيين خطة (محدد)</button></div></div>
                     <div id="plans-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
 
@@ -216,6 +215,7 @@
                     <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md mb-6"><label for="parent-portal-student-select" class="font-semibold">اختر الطالب:</label><select id="parent-portal-student-select" class="mt-1 p-2 border rounded w-full md:w-1/2 dark:bg-gray-800 dark:border-gray-600"></select></div>
                     <div id="parent-student-profile-display"><p class="text-center text-gray-500">الرجاء اختيار طالب لعرض التفاصيل.</p></div>
                 </div>
+
             </div>
         </main>
     </div>
