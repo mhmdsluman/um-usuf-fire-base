@@ -6,12 +6,72 @@
 body {
     font-family: 'Cairo', sans-serif;
     transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden; /* Prevent horizontal scroll on mobile */
 }
-.sidebar { transition: transform 0.3s ease-in-out; z-index: 40; }
-.sidebar-closed { transform: translateX(100%); }
-.main-content { transition: margin-right 0.3s ease-in-out; }
-.main-content-expanded { margin-right: 0; }
-.modal { transition: opacity 0.3s ease; z-index: 50; }
+
+/* --- SIDEBAR, NOTIFICATION, & MOBILE FIXES --- */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 256px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50;
+    transition: transform 0.3s ease-in-out;
+}
+
+.sidebar nav {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 1rem;
+}
+
+.notifications-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 70; /* HIGHEST Z-INDEX to ensure it's on top of everything */
+}
+
+@media (max-width: 1023px) {
+    /* By default, sidebar is hidden off-screen on mobile */
+    .sidebar {
+        transform: translateX(100%);
+    }
+    /* This class will be toggled by JS to show the menu */
+    .sidebar-mobile-open {
+        transform: translateX(0);
+    }
+    /* Main content takes full width on mobile */
+    .main-content {
+        margin-right: 0 !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    /* On desktop, this class hides the sidebar */
+    .sidebar-desktop-closed {
+        transform: translateX(100%);
+    }
+    /* On desktop, this class expands the content */
+    .main-content-desktop-expanded {
+        margin-right: 0;
+    }
+}
+
+.main-content {
+    transition: margin-right 0.3s ease-in-out;
+}
+
+.modal {
+    transition: opacity 0.3s ease;
+    z-index: 60; /* Modals are important, but notifications are more important */
+}
 
 /* Dynamic Theme Color */
 .bg-theme { background-color: var(--theme-color); }
@@ -20,11 +80,21 @@ body {
 .border-theme { border-color: var(--theme-color); }
 .hover\:bg-theme-dark:hover { background-color: var(--theme-color-dark); }
 .progress-bar { background-color: var(--theme-color); }
-.custom-checkbox:checked::before { box-shadow: inset 1em 1em var(--theme-color); }
+.custom-checkbox:checked { border-color: var(--theme-color); }
+.custom-checkbox:checked::before {
+    transform: scale(1);
+    background-color: var(--theme-color);
+}
+.form-radio:checked {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+    border-color: var(--theme-color);
+    background-color: var(--theme-color);
+}
+
 
 /* Progress Bar Styles */
-.progress-bar-bg { background-color: #e0e0e0; border-radius: 0.5rem; overflow: hidden; }
-.progress-bar { height: 100%; text-align: center; color: white; transition: width 0.5s ease-in-out; }
+.progress-bar-bg { background-color: #e0e0e0; border-radius: 0.5rem; overflow: hidden; height: 0.75rem; }
+.progress-bar { height: 100%; text-align: center; color: white; transition: width 0.5s ease-in-out; border-radius: 0.5rem; }
 
 /* Dark Mode Theme */
 body.dark { background-color: #1f2937; color: #d1d5db; }
@@ -53,14 +123,35 @@ body.dark { background-color: #1f2937; color: #d1d5db; }
 .dark .page-square { background-color: #4b5563; color: #d1d5db; }
 .dark .page-square.memorized { background-color: var(--theme-color-dark); color: #1f2937; }
 
-/* Notification Bell Styles */
-.notification-bell { position: relative; cursor: pointer; }
+/* Notification Dot */
 .notification-dot { position: absolute; top: 0; right: 0; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; border: 1px solid white; }
 .dark .notification-dot { border-color: #374151; }
-.notifications-panel { position: absolute; top: 100%; left: 0; width: 320px; max-height: 400px; overflow-y: auto; z-index: 60; }
 
 /* Custom Checkbox for Bulk Actions */
-.custom-checkbox { appearance: none; background-color: #fff; margin: 0; font: inherit; color: currentColor; width: 1.15em; height: 1.15em; border: 0.15em solid currentColor; border-radius: 0.15em; transform: translateY(-0.075em); display: grid; place-content: center; cursor: pointer; }
-.custom-checkbox::before { content: ""; width: 0.65em; height: 0.65em; transform: scale(0); transition: 120ms transform ease-in-out; transform-origin: bottom left; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
-.custom-checkbox:checked::before { transform: scale(1); }
-.dark .custom-checkbox { background-color: #4b5563; }
+.custom-checkbox {
+    appearance: none;
+    background-color: #fff;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.15em solid #9ca3af;
+    border-radius: 0.15em;
+    transform: translateY(-0.075em);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    transition: border-color 120ms ease-in-out;
+}
+.custom-checkbox::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(0);
+    transform-origin: bottom left;
+    transition: 120ms transform ease-in-out;
+    background-color: white;
+}
+.dark .custom-checkbox { background-color: #4b5563; border-color: #6b7280; }
