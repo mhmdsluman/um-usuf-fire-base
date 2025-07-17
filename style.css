@@ -1,86 +1,30 @@
-/* General Body and Font Styles */
+/* --- GLOBAL DEFAULTS & THEME VARIABLES --- */
 :root {
-    --theme-color: #0d9488; /* teal-600 */
-    --theme-color-dark: #14b8a6; /* teal-500 */
+    --theme-color: #0d9488; /* Default: teal-600 */
+    --theme-color-dark: #0f766e; /* A slightly darker shade for hover effects */
 }
+
 body {
     font-family: 'Cairo', sans-serif;
     transition: background-color 0.3s, color 0.3s;
     overflow-x: hidden; /* Prevent horizontal scroll on mobile */
 }
 
-/* --- SIDEBAR, NOTIFICATION, & MOBILE FIXES --- */
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    width: 256px;
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 50;
-    transition: transform 0.3s ease-in-out;
-}
-
-.sidebar nav {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 1rem;
-}
-
-.notifications-panel {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 320px;
-    max-height: 400px;
-    overflow-y: auto;
-    z-index: 70; /* HIGHEST Z-INDEX to ensure it's on top of everything */
-}
-
-@media (max-width: 1023px) {
-    /* By default, sidebar is hidden off-screen on mobile */
-    .sidebar {
-        transform: translateX(100%);
-    }
-    /* This class will be toggled by JS to show the menu */
-    .sidebar-mobile-open {
-        transform: translateX(0);
-    }
-    /* Main content takes full width on mobile */
-    .main-content {
-        margin-right: 0 !important;
-    }
-}
-
-@media (min-width: 1024px) {
-    /* On desktop, this class hides the sidebar */
-    .sidebar-desktop-closed {
-        transform: translateX(100%);
-    }
-    /* On desktop, this class expands the content */
-    .main-content-desktop-expanded {
-        margin-right: 0;
-    }
-}
-
-.main-content {
-    transition: margin-right 0.3s ease-in-out;
-}
-
-.modal {
-    transition: opacity 0.3s ease;
-    z-index: 60; /* Modals are important, but notifications are more important */
-}
-
-/* Dynamic Theme Color */
+/* --- DYNAMIC THEME COLORS --- */
+/* These classes use the CSS variables defined above */
 .bg-theme { background-color: var(--theme-color); }
 .text-theme { color: var(--theme-color); }
 .dark .text-theme-dark { color: var(--theme-color-dark); }
 .border-theme { border-color: var(--theme-color); }
 .hover\:bg-theme-dark:hover { background-color: var(--theme-color-dark); }
 .progress-bar { background-color: var(--theme-color); }
-.custom-checkbox:checked { border-color: var(--theme-color); }
+.page-square.memorized { background-color: var(--theme-color); }
+.dark .page-square.memorized { background-color: var(--theme-color-dark); }
+
+/* Custom Form Elements Theming */
+.custom-checkbox:checked { 
+    border-color: var(--theme-color); 
+}
 .custom-checkbox:checked::before {
     transform: scale(1);
     background-color: var(--theme-color);
@@ -91,41 +35,130 @@ body {
     background-color: var(--theme-color);
 }
 
+/* --- LAYOUT: SIDEBAR, MAIN CONTENT, & MODALS --- */
+/* Base Sidebar Styling */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 256px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50; /* High z-index to stay on top */
+    transition: transform 0.3s ease-in-out;
+}
 
-/* Progress Bar Styles */
-.progress-bar-bg { background-color: #e0e0e0; border-radius: 0.5rem; overflow: hidden; height: 0.75rem; }
-.progress-bar { height: 100%; text-align: center; color: white; transition: width 0.5s ease-in-out; border-radius: 0.5rem; }
+.sidebar nav {
+    flex: 1; /* Allows nav to grow and fill available space */
+    overflow-y: auto;
+    padding-bottom: 1rem;
+}
 
-/* Dark Mode Theme */
-body.dark { background-color: #1f2937; color: #d1d5db; }
-.dark .bg-gray-100 { background-color: #1f2937; }
-.dark .bg-white { background-color: #374151; }
-.dark .text-gray-800 { color: #f9fafb; }
-.dark .text-gray-600 { color: #d1d5db; }
-.dark .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3); }
-.dark .border { border-color: #4b5563; }
-.dark .bg-gray-200 { background-color: #4b5563; }
-.dark .bg-gray-50 { background-color: #4b5563; }
-.dark .hover\:bg-gray-50:hover { background-color: #4b5563; }
-.dark .text-teal-700 { color: #2dd4bf; }
-.dark .text-blue-700 { color: #60a5fa; }
-.dark ::-webkit-calendar-picker-indicator { filter: invert(1); }
-.dark .progress-bar-bg { background-color: #4b5563; }
+.main-content {
+    transition: margin-right 0.3s ease-in-out;
+}
 
-/* Achievement Badge Styles */
-.achievement-badge { display: inline-flex; align-items: center; gap: 0.5rem; background-color: #fef9c3; color: #ca8a04; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; border: 1px solid #facc15; }
-.dark .achievement-badge { background-color: #4a4a2a; color: #fef08a; border-color: #eab308; }
+.modal {
+    transition: opacity 0.3s ease;
+    z-index: 60; /* Higher than sidebar to cover it */
+}
 
-/* Memorization Grid Styles */
-.memorization-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; }
-.page-square { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background-color: #e5e7eb; color: #4b5563; font-size: 0.8rem; cursor: pointer; transition: background-color 0.2s; }
-.page-square.memorized { background-color: var(--theme-color); color: white; font-weight: bold; }
-.dark .page-square { background-color: #4b5563; color: #d1d5db; }
-.dark .page-square.memorized { background-color: var(--theme-color-dark); color: #1f2937; }
+/* Responsive Sidebar Logic */
+@media (max-width: 1023px) {
+    /* On mobile, sidebar is hidden off-screen by default */
+    .sidebar {
+        transform: translateX(100%);
+    }
+    /* This class is toggled by JS to show the menu */
+    .sidebar.sidebar-mobile-open {
+        transform: translateX(0);
+    }
+    /* Main content takes full width on mobile */
+    .main-content {
+        margin-right: 0 !important;
+    }
+}
 
-/* Notification Dot */
-.notification-dot { position: absolute; top: 0; right: 0; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; border: 1px solid white; }
-.dark .notification-dot { border-color: #374151; }
+
+/* --- COMPONENTS --- */
+
+/* Progress Bar */
+.progress-bar-bg { 
+    background-color: #e9ecef; 
+    border-radius: 0.5rem; 
+    overflow: hidden; 
+    height: 0.75rem; 
+}
+.progress-bar { 
+    height: 100%; 
+    text-align: center; 
+    color: white; 
+    transition: width 0.5s ease-in-out; 
+    border-radius: 0.5rem; 
+}
+
+/* Achievement Badge */
+.achievement-badge { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    background-color: #fef9c3; 
+    color: #ca8a04; 
+    padding: 0.25rem 0.75rem; 
+    border-radius: 9999px; 
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    border: 1px solid #facc15; 
+}
+
+/* Memorization Grid for Student Profile */
+.memorization-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); 
+    gap: 5px; 
+}
+.page-square { 
+    width: 35px; 
+    height: 35px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 4px; 
+    background-color: #e5e7eb; 
+    color: #4b5563; 
+    font-size: 0.8rem; 
+    cursor: pointer; 
+    transition: background-color 0.2s; 
+}
+.page-square:hover {
+    background-color: #d1d5db;
+}
+
+/* Notifications Panel & Dot */
+.notification-bell { 
+    position: relative; 
+    cursor: pointer; 
+}
+.notification-dot { 
+    position: absolute; 
+    top: 0; 
+    right: 0; 
+    width: 8px; 
+    height: 8px; 
+    background-color: #ef4444; 
+    border-radius: 50%; 
+    border: 1px solid white; 
+}
+.notifications-panel {
+    position: absolute;
+    top: 100%;
+    left: 0; /* Aligns to the left of the bell icon */
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 70; /* Highest z-index to appear over everything */
+}
 
 /* Custom Checkbox for Bulk Actions */
 .custom-checkbox {
@@ -152,6 +185,32 @@ body.dark { background-color: #1f2937; color: #d1d5db; }
     transform: scale(0);
     transform-origin: bottom left;
     transition: 120ms transform ease-in-out;
-    background-color: white;
+    background-color: white; /* Checkmark color */
 }
+
+
+/* --- DARK MODE THEME --- */
+body.dark { 
+    background-color: #1f2937; 
+    color: #d1d5db; 
+}
+.dark .bg-gray-100 { background-color: #1f2937; }
+.dark .bg-white { background-color: #374151; }
+.dark .text-gray-800 { color: #f9fafb; }
+.dark .text-gray-600 { color: #d1d5db; }
+.dark .text-gray-500 { color: #9ca3af; }
+.dark .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3); }
+.dark .border { border-color: #4b5563; }
+.dark .bg-gray-200 { background-color: #4b5563; }
+.dark .bg-gray-50 { background-color: #4b5563; }
+.dark .hover\:bg-gray-50:hover { background-color: #556071; }
+.dark .hover\:bg-gray-100:hover { background-color: #4b5563; }
+.dark .text-blue-700 { color: #60a5fa; }
+.dark ::-webkit-calendar-picker-indicator { filter: invert(1); }
+.dark .progress-bar-bg { background-color: #4b5563; }
+.dark .achievement-badge { background-color: #4a4a2a; color: #fef08a; border-color: #eab308; }
+.dark .page-square { background-color: #4b5563; color: #d1d5db; }
+.dark .page-square:hover { background-color: #6b7280; }
+.dark .notification-dot { border-color: #374151; }
 .dark .custom-checkbox { background-color: #4b5563; border-color: #6b7280; }
+.dark .custom-checkbox::before { background-color: #d1d5db; }
